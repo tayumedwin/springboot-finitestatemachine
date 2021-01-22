@@ -10,12 +10,9 @@ import com.practical.springboot.service.core.JobService;
 import com.practical.springboot.service.data.JobRepository;
 import com.practical.springboot.service.data.JooqJobRepository;
 import com.practical.springboot.service.domain.Job;
-import com.practical.springboot.service.fsm.DefaultStateMachine;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -50,16 +47,8 @@ public class JobConfig {
     }
 
     @Bean
-    public StateMachine<String, String> getStateMachine(){
-        return new DefaultStateMachine();
-    }
-
-
-    @Bean
     public JobService jobService(){
-        return new DefaultJobService(jobRepository()/*, getStateMachine()*/);
+        return new DefaultJobService(jobRepository());
     }
-
-
 
 }

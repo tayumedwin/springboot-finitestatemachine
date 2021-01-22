@@ -25,25 +25,26 @@ public class JobController {
         this.service = notificationService;
     }
 
+    @GetMapping("/create/{jobType}")
+    @ResponseStatus(HttpStatus.OK)
+    public String create(@PathVariable("jobType") String jobType){
+        Job job = service.createJob(jobType);
+
+        return "Job type: " + jobType + " has been created for id:" + job.getJobId();
+    }
 
     @GetMapping("/update/{jobId}")
     @ResponseStatus(HttpStatus.OK)
     public String update(@PathVariable("jobId") int jobId){
-        LOG.info("Update job id:"+jobId);
-
-        //TODO: return boolean
         String jobState = service.updateJob(jobId);
-        return "Job for: " + jobId + " change state to:"+jobState;
+        return "Job for: " + jobId + " change state to:" + jobState;
     }
 
-    @GetMapping("/create/{jobType}")
+    @GetMapping("/update/{jobId}/{state}")
     @ResponseStatus(HttpStatus.OK)
-    public String create(@PathVariable("jobType") String jobType){
-        LOG.info("JobController create event with job type:"+jobType);
-
-        Job job = service.createJob(jobType);
-
-        return "Job type: " + jobType + " has been created for id:" + job.getJobId();
+    public String update(@PathVariable("jobId") int jobId, @PathVariable("state") String state){
+        String jobState = service.updateJob(jobId, state);
+        return "Job for: " + jobId + " change state to:" + jobState;
     }
 
 }
