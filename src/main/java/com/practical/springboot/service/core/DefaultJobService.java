@@ -93,6 +93,13 @@ public class DefaultJobService implements JobService {
 
 
         if(job != null || !stateContains(stateStr)){
+            if(stateStr.equalsIgnoreCase(State.DELETED.getStateName())){
+                jobRepository.updateJob(
+                        job.getJobId(), State.DELETED.getStateName(),
+                        Status.INACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+
+                job = jobRepository.findByJobId(jobId);
+            }
             if(!job.getState().equalsIgnoreCase(State.DELETED.getStateName()) && job.getJobType().equalsIgnoreCase(TYPE_B)) {
                 jobRepository.updateJob(
                         job.getJobId(), stateStr,
