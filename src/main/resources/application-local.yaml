@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    ddl-auto: create-drop
+    initialization-mode: always
+    url: jdbc:mysql://localhost:3306/testdb
+    username: user
+    password: password
+    driverClassName=org: com.mysql.jdbc.Driver
+
+server:
+  port: 9002
