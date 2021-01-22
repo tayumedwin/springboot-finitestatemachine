@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 
 @RestController
 @RequestMapping("/v1/job")
@@ -34,8 +32,8 @@ public class JobController {
         LOG.info("Update job id:"+jobId);
 
         //TODO: return boolean
-        service.updateJob(jobId);
-        return "Job for: " + jobId + " has been updated";
+        String jobState = service.updateJob(jobId);
+        return "Job for: " + jobId + " change state to:"+jobState;
     }
 
     @GetMapping("/create/{jobType}")
@@ -43,11 +41,9 @@ public class JobController {
     public String create(@PathVariable("jobType") String jobType){
         LOG.info("JobController create event with job type:"+jobType);
 
+        Job job = service.createJob(jobType);
 
-        //TODO: return jobId
-        service.createJob(jobType);
-
-        return "Job type: " + jobType + " has been created";
+        return "Job type: " + jobType + " has been created for id:" + job.getJobId();
     }
 
 }

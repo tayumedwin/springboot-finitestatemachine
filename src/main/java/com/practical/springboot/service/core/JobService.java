@@ -1,11 +1,13 @@
 package com.practical.springboot.service.core;
 
 
+import com.practical.springboot.service.domain.Job;
+
 public interface JobService {
 
-    void createJob(String jobType);
-    void updateJob(int jobId);
-    void getJob(int jobId);
-    void deleteJob(int jobId);
+    Job createJob(String jobType);
+    String updateJob(int jobId);
+    Job getJob(int jobId);
+    boolean deleteJob(int jobId);
 
 }

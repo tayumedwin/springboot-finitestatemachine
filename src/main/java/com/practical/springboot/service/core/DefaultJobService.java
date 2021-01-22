@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 
 @Transactional
@@ -26,28 +26,17 @@ public class DefaultJobService implements JobService {
     private StateMachine<String, String> stateMachine;
 
     private final JobRepository jobRepository;
-    //private final StateMachine stateMachine;
 
-    public DefaultJobService(JobRepository jobRepository/*, StateMachine stateMachine*/){
+    public DefaultJobService(JobRepository jobRepository){
         this.jobRepository = jobRepository;
-        //this.stateMachine = stateMachine;
         LOG.info("DefaultNotificationService start");
     }
 
     @Override
-    public void createJob(String jobType) {
+    public Job createJob(String jobType) {
         stateMachine.start();
-        LOG.info("initial state 1:" + stateMachine.getInitialState());
-        LOG.info("extended state 1:" + stateMachine.getExtendedState());
-        LOG.info("transitions 1:" + stateMachine.getTransitions());
-        boolean isSuccess = stateMachine.sendEvent(Event.EVENT_A.getEventName());
-        LOG.info("initial state 2:" + stateMachine.getInitialState());
-        LOG.info("extended state 2:" + stateMachine.getExtendedState());
-        LOG.info("transitions 2:" + stateMachine.getTransitions());
-        LOG.info("isSuccess:"+isSuccess);
-        LOG.info("states:"+stateMachine.getState().getIds().toArray().toString());
+        stateMachine.sendEvent(Event.EVENT_B.getEventName());
 
-        //TODO: create Job entity to be persist
         Job job = new Job();
         job.setJobType(jobType);
         job.setState(stateMachine.getInitialState().getId());
@@ -57,22 +46,51 @@ public class DefaultJobService implements JobService {
         job.setUpdated_by(UPDATED_BY);
         job.setUpdatedDate(Instant.now());
 
+        stateMachine.sendEvent(Event.EVENT_A.getEventName());
+        stateMachine.sendEvent(Event.EVENT_B.getEventName());
+        stateMachine.sendEvent(Event.EVENT_A.getEventName());
+        stateMachine.sendEvent(Event.EVENT_C.getEventName());
+
         jobRepository.save(job);
-        LOG.info("Create Job");
+
+        //stateMachine.stop();
+
+        return job;
     }
 
     @Override
-    public void updateJob(int jobId) {
+    public String updateJob(int jobId) {
         LOG.info("Update Job");
+
+        Job job = jobRepository.findByJobId(jobId);
+
+        if(job != null){
+            if(job.getState() != State.DELETED.getStateName()) {
+                if (job.getState().equalsIgnoreCase(State.UNALLOCATED.getStateName())){
+                    stateMachine.start();
+                    boolean isSuccess = stateMachine.sendEvent(Event.EVENT_B.getEventName());
+                    LOG.info("updateJob isSuccess:"+isSuccess);
+                    jobRepository.updateJob(job.getJobId(), State.ALLOCATED.getStateName(), Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                }
+            }
+
+            stateMachine.stop();
+            return job.getState();
+        }else{
+            return "No job found for jobId:"+jobId;
+        }
     }
 
     @Override
-    public void getJob(int jobId) {
+    public Job getJob(int jobId) {
+        Job job = new Job();
         LOG.info("Get Job");
+        return job;
     }
 
     @Override
-    public void deleteJob(int jobId) {
+    public boolean deleteJob(int jobId) {
 
+        return true;
     }
 }
