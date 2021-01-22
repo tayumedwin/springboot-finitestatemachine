@@ -1,8 +1,11 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MYSQL
-    username: sa
+    ddl-auto: create-drop
+    initialization-mode: always
+    url: jdbc:mysql://localhost:3306/testdb
+    username: user
     password: password
+    driverClassName=org: com.mysql.jdbc.Driver
 
 server:
-  port: '9002'
+  port: 9002
