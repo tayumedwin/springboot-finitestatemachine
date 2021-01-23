@@ -7,5 +7,9 @@ spring:
     password: password
     driverClassName=org: com.mysql.jdbc.Driver
 
+logging:
+  level:
+    com.practical.springboot.service: INFO
+
 server:
   port: 9002

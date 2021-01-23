@@ -1,7 +1,6 @@
 package com.practical.springboot.service.domain;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public class Job {
 

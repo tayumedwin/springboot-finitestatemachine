@@ -7,5 +7,10 @@ spring:
     password: password
     driverClassName=org: com.mysql.jdbc.Driver
 
+logging:
+  level:
+    org.jooq.tools.LoggerListener: DEBUG
+    com.practical.springboot.service: DEBUG
+
 server:
   port: 9002

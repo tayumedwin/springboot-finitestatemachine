@@ -1,14 +1,11 @@
 package com.practical.springboot.service.core;
 
 import com.practical.springboot.service.data.JobRepository;
-import com.practical.springboot.service.domain.Event;
 import com.practical.springboot.service.domain.Job;
 import com.practical.springboot.service.domain.State;
 import com.practical.springboot.service.domain.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -48,13 +45,12 @@ public class DefaultJobService implements JobService {
     }
 
     @Override
-    public String updateJob(int jobId) {
-        LOG.info("Update Job");
-
+    public void updateJob(int jobId) {
         Job job = jobRepository.findByJobId(jobId);
 
         if(job != null){
-            if(!job.getState().equalsIgnoreCase(State.DELETED.getStateName())) {
+            if(!job.getState().equalsIgnoreCase(State.DELETED.getStateName()) &&
+                    !job.getState().equalsIgnoreCase(State.COMPLETED.getStateName())) {
                 if (job.getState().equalsIgnoreCase(State.UNALLOCATED.getStateName())){
                     jobRepository.updateJob(
                             job.getJobId(), State.ALLOCATED.getStateName(),
@@ -67,49 +63,62 @@ public class DefaultJobService implements JobService {
                     jobRepository.updateJob(
                             job.getJobId(), State.STATEB.getStateName(),
                             Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
-                }else if (job.getState().equalsIgnoreCase(State.STATEB.getStateName())){
+                }else{
                     jobRepository.updateJob(
                             job.getJobId(), State.COMPLETED.getStateName(),
                             Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
-                }else{
-                    jobRepository.updateJob(
-                            job.getJobId(), State.DELETED.getStateName(),
-                            Status.INACTIVE.getStatusName(), UPDATED_BY, Instant.now());
                 }
-            }else{
-                return "Cannot change the state, the job was already " + State.DELETED.getStateName();
-            }
+                job = jobRepository.findByJobId(jobId);
 
-            Job updatedJob = jobRepository.findByJobId(jobId);
-            return updatedJob.getState();
+                LOG.info("Job: {} change state to: {}", jobId, job.getState());
+            }else{
+
+                LOG.warn("Cannot change the state, the job was already {}", job.getState());
+            }
         }else{
-            return "No job found for jobId:"+jobId;
+            LOG.warn("No job found for jobId {}", jobId);
         }
     }
 
     @Override
-    public String updateJob(int jobId, String stateStr) {
+    public void updateJob(int jobId, String stateStr) {
         Job job = jobRepository.findByJobId(jobId);
 
-
-        if(job != null || !stateContains(stateStr)){
-            if(stateStr.equalsIgnoreCase(State.DELETED.getStateName())){
-                jobRepository.updateJob(
+        if(job != null){
+            if(job.getState().equalsIgnoreCase(State.DELETED.getStateName())) {
+                LOG.warn("Job: {} is already in state: {}", job, job.getState());
+            }else {
+                if (stateStr.equalsIgnoreCase(State.DELETED.getStateName())) {
+                    //can be changed to delete sql
+                    jobRepository.updateJob(
                         job.getJobId(), State.DELETED.getStateName(),
                         Status.INACTIVE.getStatusName(), UPDATED_BY, Instant.now());
 
-                job = jobRepository.findByJobId(jobId);
-            }
-            if(!job.getState().equalsIgnoreCase(State.DELETED.getStateName()) && job.getJobType().equalsIgnoreCase(TYPE_B)) {
-                jobRepository.updateJob(
-                        job.getJobId(), stateStr,
-                        Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                    job = jobRepository.findByJobId(jobId);
 
-                job = jobRepository.findByJobId(jobId);
+                    LOG.info("Job: {} change state to: {}", jobId, job.getState());
+                }else {
+                    LOG.warn("Job type: {} is not allowed to change state", job.getJobType());
+                }
+
+
+                /*TypeB, can change from any state : Unallocated : Allocated : StateA : StateB
+                to Unallocated : Allocated : StateA : StateB : Completed
+                */
+                if(job.getJobType().equalsIgnoreCase(TYPE_B)) {
+                    if (!job.getState().equalsIgnoreCase(State.DELETED.getStateName())) {
+                        jobRepository.updateJob(
+                                job.getJobId(), stateStr,
+                                Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+
+                        job = jobRepository.findByJobId(jobId);
+                        LOG.info("Job: {} change state to: {}", jobId, job.getState());
+                    }
+                }
             }
+        }else{
+            LOG.warn("No job found for jobId {}", jobId);
         }
-
-        return job.getState();
     }
 
     @Override
@@ -117,21 +126,5 @@ public class DefaultJobService implements JobService {
         Job job = new Job();
         LOG.info("Get Job");
         return job;
-    }
-
-    @Override
-    public boolean deleteJob(int jobId) {
-
-        return true;
-    }
-
-    private boolean stateContains(String stateStr){
-        for(State state : State.values()){
-            if(state.getStateName().equalsIgnoreCase(stateStr)){
-                return true;
-            }
-        }
-
-        return false;
     }
 }

@@ -49,7 +49,6 @@ public class JooqJobRepository implements JobRepository {
 
     @Override
     public boolean getJobExits(int jobId) {
-        System.out.println("getJobExits");
         return dslContext
                 .fetchExists(dslContext.selectFrom(JOBSTBL)
                         .where(JOBSTBL.JOB_ID.eq(jobId)));
