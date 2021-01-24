@@ -19,7 +19,7 @@ public class RecordJobConverterTest {
 
     @BeforeEach
     void setUp(){
-        this.job = DataFixtures.getJob();
+        this.job = DataFixtures.getJobTypeA_Unallocated();
         DSLContext dslContext = DSL.using(SQLDialect.MYSQL);
         this.converter = new RecordJobConverter();
         this.jobstblRecord = new JobRecordConverter(dslContext).convert(job);

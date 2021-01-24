@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
 
 
@@ -19,29 +20,30 @@ public class DefaultJobService implements JobService {
     private static final String UPDATED_BY = "Edwin Tayum";
     private static final String TYPE_B = "TypeB";
 
-
     private final JobRepository jobRepository;
+    private Clock clock;
 
     public DefaultJobService(JobRepository jobRepository){
         this.jobRepository = jobRepository;
+        this.clock = Clock.systemDefaultZone();
         LOG.info("DefaultNotificationService start");
     }
 
     @Override
-    public Job createJob(String jobType) {
+    public void createJob(String jobType) {
 
         Job job = new Job();
         job.setJobType(jobType);
         job.setState(State.UNALLOCATED.getStateName());
         job.setStatus(Status.NEW.getStatusName());
         job.setCreated_by(CREATED_BY);
-        job.setCreatedDate(Instant.now());
+        job.setCreatedDate(Instant.now(clock));
         job.setUpdated_by(UPDATED_BY);
-        job.setUpdatedDate(Instant.now());
+        job.setUpdatedDate(Instant.now(clock));
 
         jobRepository.save(job);
 
-        return job;
+        LOG.info("Job type: {} has been created with id: {}", jobType, job.getJobId());
     }
 
     @Override
@@ -54,19 +56,19 @@ public class DefaultJobService implements JobService {
                 if (job.getState().equalsIgnoreCase(State.UNALLOCATED.getStateName())){
                     jobRepository.updateJob(
                             job.getJobId(), State.ALLOCATED.getStateName(),
-                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
                 }else if (job.getState().equalsIgnoreCase(State.ALLOCATED.getStateName())){
                     jobRepository.updateJob(
                             job.getJobId(), State.STATEA.getStateName(),
-                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
                 }else if (job.getState().equalsIgnoreCase(State.STATEA.getStateName())){
                     jobRepository.updateJob(
                             job.getJobId(), State.STATEB.getStateName(),
-                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
                 }else{
                     jobRepository.updateJob(
                             job.getJobId(), State.COMPLETED.getStateName(),
-                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                            Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
                 }
                 job = jobRepository.findByJobId(jobId);
 
@@ -92,7 +94,7 @@ public class DefaultJobService implements JobService {
                     //can be changed to delete sql
                     jobRepository.updateJob(
                         job.getJobId(), State.DELETED.getStateName(),
-                        Status.INACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                        Status.INACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
 
                     job = jobRepository.findByJobId(jobId);
 
@@ -105,11 +107,11 @@ public class DefaultJobService implements JobService {
                 /*TypeB, can change from any state : Unallocated : Allocated : StateA : StateB
                 to Unallocated : Allocated : StateA : StateB : Completed
                 */
-                if(job.getJobType().equalsIgnoreCase(TYPE_B)) {
+                if(job.getJobType().equalsIgnoreCase(TYPE_B) && !stateStr.equalsIgnoreCase(State.DELETED.getStateName())) {
                     if (!job.getState().equalsIgnoreCase(State.DELETED.getStateName())) {
                         jobRepository.updateJob(
                                 job.getJobId(), stateStr,
-                                Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now());
+                                Status.ACTIVE.getStatusName(), UPDATED_BY, Instant.now(clock));
 
                         job = jobRepository.findByJobId(jobId);
                         LOG.info("Job: {} change state to: {}", jobId, job.getState());
@@ -127,4 +129,8 @@ public class DefaultJobService implements JobService {
         LOG.info("Get Job");
         return job;
     }
+    void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
 }

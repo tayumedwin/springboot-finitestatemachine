@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 import static com.practical.springboot.data.jooq.tables.Jobstbl.JOBSTBL;
@@ -25,7 +24,7 @@ public class JobRecordConverterTest {
 
     @BeforeEach
     void setUp(){
-        this.job = DataFixtures.getJob();
+        this.job = DataFixtures.getJobTypeA_Unallocated();
         DSLContext dslContext = DSL.using(SQLDialect.MYSQL);
         this.converter = new JobRecordConverter(dslContext);
     }

@@ -1,7 +1,6 @@
 package com.practical.springboot.service.web;
 
 import com.practical.springboot.service.core.JobService;
-import com.practical.springboot.service.domain.Job;
 import com.practical.springboot.service.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,17 +21,16 @@ public class JobController {
 
     private final JobService service;
 
-    public JobController(JobService notificationService){
+    public JobController(JobService jobService){
         LOG.info("JobController");
-        this.service = notificationService;
+        this.service = jobService;
     }
 
     @GetMapping("/create/{jobType}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity create(@PathVariable("jobType") String jobType){
-        Job job = service.createJob(jobType);
+        service.createJob(jobType);
 
-        LOG.info("Job type: {} has been created with id: {}", jobType, job.getJobId());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -53,7 +51,6 @@ public class JobController {
         }else{
             LOG.warn("Invalid state: {}", state);
         }
-
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
